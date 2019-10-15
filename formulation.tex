@@ -1,0 +1,37 @@
+\documentclass[12pt,english]{article}
+\usepackage{amsmath,amsfonts,amsthm,graphicx,mathtools,xcolor,parskip, gensymb}
+%arg redefinitions
+\DeclareMathOperator*{\argmin}{argmin}
+\DeclareMathOperator*{\argmax}{argmax}
+\DeclarePairedDelimiter\norm{\lVert}{\rVert}
+
+\begin{document}
+
+draft; to be checked
+
+\section{Stochastic MAB}
+
+For each \(t\), associate \(i\)-th bandit arm with an unknown probability distribution \(X_{i,t} = \mu_i + \varepsilon_t\) for \(i=1,\dots,K\)  where \(\mu_i\) is its mean value and \(\varepsilon_t \sim \mathcal{N}\left( 0, \sigma_2 \right) \)
+
+The reward from an arm/policy at \(t\) is \(r_t = X_{I_t}\)
+
+The optimal arm at amongst all \(1,\dots,K\) arms is \(\mu_i^*=max_i\mu_i\) (why i in u* ?)
+
+Goal is to minimize the expected regret \(\mathbb{E} \left[ R\left( T \right)  \right] \), with the regret \(R\left( T \right) \) defined as:
+\begin{equation}\label{eq-r}
+R\left( T \right) = \mathbb{E}_{I_t} \left[ \sum_{t=1}^{T} \mu_i^* \right] - \mathbb{E}_{I_t} \left[ \sum_{t=1}^T r_t\right]
+\end{equation}
+
+We assume variance \(\sigma_2 = 0\) and thus \(X_{i,t} = \mu_i\) and \(r_t = \mu_{I_t}\). Equation (\ref{eq-r}) becomes:
+\begin{equation}\label{eq-r-novar}
+	R\left( T \right) = \mathbb{E}_{I_t} \left[ \sum_{t=1}^{T} \mu_i^* - \sum_{t=1}^T \mu_{I_t} \right]
+\end{equation}
+
+in the notes the first sum was iterated from i=1 (!?)
+
+
+
+\end{document}
+
+
+
