@@ -1,21 +1,22 @@
 # -*- coding: utf-8 -*-
 """
-Data Science Project
-
+Bandit classique - Data Science Project
 Group zambra
 
-Bandit classique avec la politique random et la politique epsilon greedy
+Bandit classique
+Created on Sat Oct 19 21:55:42 2019
+
+@author: DANG
 """
 
 import numpy as np
 import matplotlib.pyplot as plt
+import math
 
 class Bandit:
-    def __init__(self, k, T, politique, epsilon = 0):
+    def __init__(self, k, T):
         self.k = k #number of arms
         self.T = T # total step
-        self.politique = politique
-        self.epsilon = epsilon
         
         self.n = 0 #step count
         self.k_n = np.zeros(k) #step count of each arm
@@ -28,22 +29,49 @@ class Bandit:
         
         self.regret = np.zeros(T)
         self.mean_regret = np.zeros(T)
+
+    def get_reward(self, I):
+        reward = self.mu[I]
+        # reward = np.random.normal(self.mu[I],1,1)
+        return reward
     
-    def run(self):
+    def argmax_UCB(self):
+        UCB = -1
+        I = -1 
+        for i in range(self.k):
+            UCB_i = self.k_mean_reward[i] + math.sqrt(2*math.log(self.n)/self.k_n[i])
+            if UCB_i > UCB:
+                UCB = UCB_i
+                I = i
+        return I
+    
+    def get_I_greedy(self, epsilon):
+        tmp = np.random.rand()
+        if tmp < epsilon:
+            I = np.random.choice(self.k)
+        else:
+            I = np.argmax(self.k_mean_reward)
+        return I
+    
+    def get_I_UCB(self, i):
+        if i < self.k:
+            I = i
+        else:
+            I = self.argmax_UCB()
+        return I
+    
+    def run(self, politique, epsilon = 0.005):
         total_reward = 0
         total_regret = 0
         for i in range(self.T):
-            if self.politique == 'random':
+            if politique == 'random':
                 I = np.random.choice(self.k)
+            elif politique == 'greedy':
+                I = self.get_I_greedy(epsilon)
             else:
-                tmp = np.random.rand()
-                if tmp < self.epsilon:
-                    I = np.random.choice(self.k)
-                else:
-                    I = np.argmax(self.k_mean_reward)
+                I = self.get_I_UCB(i)
                     
-            reward =  self.mu[I]
-            
+            reward =  self.get_reward(I)
             
             self.n += 1
             self.k_n[I] += 1
@@ -55,34 +83,29 @@ class Bandit:
             total_regret += self.max_mu - reward
             self.mean_regret[i] = total_regret / self.n
             self.regret[i] = total_regret
-    
-    
-if __name__ == "__main__":
-    # parameters
-    k =10
-    T =10000 #number of step
-    niter = 10 #iterate 10 times to get average values
-    politique = 'greedy'
-    espsilon = 0.005
-    
+      
+
+def run_bandit(k, T, niter=10, politique = 'UCB', epsilon=0.005):
     # vector definition
     regret = np.zeros((T))
     mean_regret = np.zeros((T))
-    reward = np.zeros((T))
+    mean_reward = np.zeros((T))
     
     # bandit
     for i in range(niter):
-        bandit = Bandit(k,T,politique, espsilon)
-        bandit.run()
+        bandit = Bandit(k,T)
+        bandit.run(politique, epsilon)
         regret = bandit.regret
         mean_regret += bandit.mean_regret
-        reward += bandit.mean_reward
+        mean_reward += bandit.mean_reward
     regret /= niter
     mean_regret /= niter
-    reward /= niter
-    
-    # plot
-    plt.plot(reward)
+    mean_reward /= niter
+    return bandit, mean_reward, regret, mean_regret
+
+
+def bandit_plot(mean_reward, regret, mean_regret):
+    plt.plot(mean_reward)
     plt.title('mean reward')
     plt.show()
     plt.plot(mean_regret)
@@ -91,3 +114,15 @@ if __name__ == "__main__":
     plt.plot(regret)
     plt.title('regret')
     plt.show()
+
+
+if __name__ == "__main__":
+    # parameters
+    k =10
+    T =10000 #number of step
+    niter = 1 #iterate 10 times to get average values
+    politique = 'UCB' # random, greedy or UCB
+    epsilon = 0.005
+    
+    bandit, mean_reward, regret, mean_regret = run_bandit(k, T, niter, politique, epsilon)
+    bandit_plot(mean_reward, regret, mean_regret)
