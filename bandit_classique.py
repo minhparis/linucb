@@ -29,10 +29,11 @@ class Bandit:
         
         self.regret = np.zeros(T)
         self.mean_regret = np.zeros(T)
+        self.choices = np.zeros(T)
 
     def get_reward(self, I):
-        reward = self.mu[I]
-        # reward = np.random.normal(self.mu[I],1,1)
+        # reward = self.mu[I]
+        reward = np.random.normal(self.mu[I],1,1)
         return reward
     
     def argmax_UCB(self):
@@ -47,7 +48,7 @@ class Bandit:
     
     def get_I_greedy(self, epsilon):
         tmp = np.random.rand()
-        if tmp < epsilon:
+        if tmp < (epsilon / math.sqrt(self.n+1)):
             I = np.random.choice(self.k)
         else:
             I = np.argmax(self.k_mean_reward)
@@ -71,6 +72,7 @@ class Bandit:
             else:
                 I = self.get_I_UCB(i)
                     
+            self.choices[i] = I
             reward =  self.get_reward(I)
             
             self.n += 1
@@ -78,9 +80,11 @@ class Bandit:
             
             total_reward += reward
             self.mean_reward[i] += total_reward/ self.n
-            self.k_mean_reward[I] += (reward-self.k_mean_reward[I])/self.k_n[I]
+            # self.k_mean_reward[I] += (reward-self.k_mean_reward[I])/self.k_n[I]
+            self.k_mean_reward[I] = (self.k_mean_reward[I] * self.k_n[I] + reward - self.k_mean_reward[I]) / self.k_n[I]
             
-            total_regret += self.max_mu - reward
+            # total_regret += self.max_mu - reward
+            total_regret += self.max_mu - self.mu[I]
             self.mean_regret[i] = total_regret / self.n
             self.regret[i] = total_regret
       
@@ -104,16 +108,32 @@ def run_bandit(k, T, niter=10, politique = 'UCB', epsilon=0.005):
     return bandit, mean_reward, regret, mean_regret
 
 
-def bandit_plot(mean_reward, regret, mean_regret):
+def bandit_plot(bandit, mean_reward, regret, mean_regret, flag):
     plt.plot(mean_reward)
     plt.title('mean reward')
     plt.show()
     plt.plot(mean_regret)
     plt.title('mean regret')
     plt.show()
-    plt.plot(regret)
-    plt.title('regret')
+    plt.plot(bandit.choices)
+    plt.title('choices')
     plt.show()
+    plt.hist(bandit.choices, bins = 10)
+    plt.show()
+    if flag == 'loglog':
+        plt.loglog(regret)
+        plt.title('regret')
+        plt.show()
+    elif flag == 'log':
+        plt.yscale('log')
+        plt.plot(regret)
+        plt.title('regret')
+        plt.show()
+    else:
+        plt.plot(regret)
+        plt.title('regret')
+        plt.show()
+        
 
 
 if __name__ == "__main__":
@@ -122,7 +142,14 @@ if __name__ == "__main__":
     T =10000 #number of step
     niter = 1 #iterate 10 times to get average values
     politique = 'UCB' # random, greedy or UCB
-    epsilon = 0.005
+    epsilon = 5
     
+    if politique == 'greedy':
+        flag = 'loglog'
+    elif politique == 'UCB':
+        flag = 'log'
+    else:
+        flag = 'normal'
     bandit, mean_reward, regret, mean_regret = run_bandit(k, T, niter, politique, epsilon)
-    bandit_plot(mean_reward, regret, mean_regret)
+    bandit_plot(bandit, mean_reward, regret, mean_regret, flag)
+    print(bandit.mu)
