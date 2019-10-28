@@ -16,9 +16,10 @@ from collections import Counter
 import numpy as np
 
 class LinUCB:
-    def __init__(self, movielens_data, alpha = 1):
+    def __init__(self, movielens_data, alpha = 1, lambda_ = 1, delta = 0):
         self.data = movielens_data
         self.alpha = alpha
+        self.delta = delta
         
         self.n_movies = movielens_data.n_movies
         self.users = movielens_data.active_users()
@@ -29,7 +30,7 @@ class LinUCB:
 
         self.d = self.X.shape[1]
         
-        self.A = np.repeat(np.identity(self.d)[np.newaxis, :, :], self.n_movies, axis=0)
+        self.A = np.repeat(np.identity(self.d)[np.newaxis, :, :] * lambda_, self.n_movies, axis=0)
         self.b = np.repeat(np.zeros(self.d)[np.newaxis, :], self.n_movies, axis=0)
         
         self.recom_record = np.zeros((self.n_users, self.n_movies))
@@ -67,7 +68,7 @@ class LinUCB:
             a = self.choose_arm(user)
             
             x = self.X[a,:].reshape(-1,1)
-            r = self.data.reward(self.users[user], a)
+            r = self.data.reward(self.users[user], a) + np.random.normal(0,self.delta)
             
             if r == 0:
                 print('this film has not a score')
@@ -83,14 +84,42 @@ class LinUCB:
             
         return regrets, ratings, films_rec
     
+def bandit_plot(regrets, ratings, films_rec):
+    films = Counter(films_rec)
+    plt.bar(np.arange(len(films.keys())), films.values())
+    plt.xticks(np.arange(len(films.keys())), films.keys())
+    plt.title("film recommendation frequence")
+    plt.show()
+    
+    plt.plot(ratings)
+    plt.xlabel("T")
+    plt.title("rating")
+    plt.show()
+    
+    plt.figure(figsize=(13,6))
+    plt.subplot(121)
+    plt.plot(regrets)
+    plt.xlabel("T")
+    plt.ylabel("Regret cumulé")
+    plt.title("LinUCB Regret cumulé")
+    
+    plt.subplot(122)
+    xs = [np.sqrt(i)*np.log(i) for i in range(1,len(regrets)+1)]
+    plt.plot(xs, regrets)
+    plt.xlabel("sqrt(T)*log(T)")
+    plt.ylabel("Regret cumulé")
+    plt.title("LinUCB Regret cumulé")
+    plt.show()
 
 if 'movielens_data' not in locals():
     print('preparing data')
     movielens_data = MovieLensData()
 
-niter = 200
-alpha = 1.5
-lin_ucb = LinUCB(movielens_data, alpha)
+niter = 500
+alpha = 2.8
+lambda_ = 2
+delta = 0. # noise
+lin_ucb = LinUCB(movielens_data, alpha, lambda_, delta)
 
 user = 0
 
@@ -98,15 +127,4 @@ start = time.time()
 regrets, ratings, films_rec = lin_ucb.fit(user, niter)
 end = time.time()
 print("time used: {}".format(end - start))
-
-films = Counter(films_rec)
-plt.bar(np.arange(len(films.keys())), films.values())
-plt.xticks(np.arange(len(films.keys())), films.keys())
-plt.title("film recommendation frequence")
-plt.show()
-
-plt.plot(regrets)
-plt.xlabel("nombre d'itérations")
-plt.ylabel("Regret cumulé")
-plt.title("LinUCB Regret cumulé")
-plt.show()
+bandit_plot(regrets, ratings, films_rec)
