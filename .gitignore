@@ -1,0 +1,7 @@
+# Ignore Mac system files
+.DS_store
+
+# Ignore all text files
+*.txt
+
+__pycache__

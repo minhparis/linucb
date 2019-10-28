@@ -36,15 +36,15 @@ class MovieLensData:
         self.M = M / 5.
         
     def read_data(self):
-        self.ratings = pd.read_table('../ml-1m/ratings.dat', sep='::', 
+        self.ratings = pd.read_table('ml-1m/ratings.dat', sep='::', 
                                 names = ['UserID', 'MovieID', 'Rating', 'Timestamp'],
                                 encoding = 'latin1',
                                 engine = 'python')
-        self.movies  = pd.read_table('../ml-1m/movies.dat',  sep='::',
+        self.movies  = pd.read_table('ml-1m/movies.dat',  sep='::',
                                 names = ['MovieID', 'Title', 'Genres'], 
                                 encoding = 'latin1',
                                 engine ='python')
-        self.users   = pd.read_table('../ml-1m/users.dat',  sep='::', 
+        self.users   = pd.read_table('ml-1m/users.dat',  sep='::', 
                                 names = ['UserID', 'Gender', 'Age', 'Occupation', 'Zip'], 
                                 encoding = 'latin1',
                                 engine = 'python')
