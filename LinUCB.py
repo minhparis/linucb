@@ -25,8 +25,8 @@ class LinUCB:
         self.users = movielens_data.active_users()
         self.n_users = self.users.shape[0]
         
+        # append constant 1 to every movie vector
         self.X = np.concatenate((movielens_data.Vt.transpose(), np.ones((self.n_movies,1))), axis = 1)
-        self.X = normalize(self.X, axis=0)
 
         self.d = self.X.shape[1]
         
