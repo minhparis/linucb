@@ -61,7 +61,7 @@ class LinUCB:
             
             r = self.data.reward(self.users[user], a)
             if r == 0:
-                p_t[a] = -1e2
+                p_t[a] = 0
                 continue
             
             Aa_inv = np.linalg.inv(self.A[a])
@@ -74,18 +74,18 @@ class LinUCB:
                     +x.transpose().dot(Aa_inv).dot(Ba).dot(A0_inv).dot(Ba.transpose()).dot(Aa_inv).dot(x)
             if s_ta < 0:
                 print("damn it something's going wrong with {}th film".format(a))
-                p_t[a] = -1e2
+                p_t[a] = 0
                 continue
             mean_t[a] = z.transpose().dot(self.beta)+x.transpose().dot(self.theta[a,:])
             p_t[a] = mean_t[a] + self.alpha * np.sqrt(s_ta)
         
         #choose arm
         p_t_max = p_t.max()
-        if p_t_max == -1e2:
+        if p_t_max == 0:
             return -1,0,0
         best_arms = np.flatnonzero(p_t == p_t_max)
         a = np.random.choice(best_arms) # choose with ties broken
-        return a, mean_t[a], p_t[a]
+        return a, mean_t, p_t
     
     def fit(self, users, T = 50):
         regrets = []
@@ -93,11 +93,13 @@ class LinUCB:
         films_rec = []
         ratings_ucb = []
         ratings_esti_mean = []
+        ratings_taken_ucb = []
+        ratings_taken_mean = []
         
         regret = 0
         for i in range(T):
             for user in users:
-                a, mean_t, p_t_max = self.choose_arm(user)
+                a, mean_t, p_t = self.choose_arm(user)
                 if a == -1:
                     print("we don't get a film recommendation for user {}".format(user))
                     continue
@@ -125,11 +127,15 @@ class LinUCB:
                 ratings.append(r)
                 films_rec.append(a)
                 ratings_esti_mean.append(mean_t)
-                ratings_ucb.append(p_t_max)
+                ratings_ucb.append(p_t)
+                ratings_taken_mean.append(mean_t[a])
+                ratings_taken_ucb.append(p_t[a])
             
-        return regrets, ratings, ratings_esti_mean, ratings_ucb, films_rec
+        ratings_esti_mean = np.vstack(ratings_esti_mean)
+        ratings_ucb = np.vstack(ratings_ucb)
+        return regrets, ratings, ratings_esti_mean, ratings_ucb, ratings_taken_mean, ratings_taken_ucb, films_rec
     
-def bandit_plot(regrets, ratings, ratings_esti_mean, ratings_ucb, films_rec, movielens_data, lin_ucb, user):
+def bandit_plot(regrets, ratings, ratings_esti_mean, ratings_ucb, ratings_taken_mean, ratings_taken_ucb, films_rec, movielens_data, lin_ucb, user):
     films = Counter(films_rec)
     films_keys = list(films.keys())
     
@@ -148,8 +154,15 @@ def bandit_plot(regrets, ratings, ratings_esti_mean, ratings_ucb, films_rec, mov
     plt.title("real rating")
     plt.show()
     
-    plt.plot(ratings_ucb,label="ucb rating")
-    plt.plot(ratings_esti_mean, label="estimated mean rating")
+    plt.plot(ratings_ucb[:,25],label="ucb rating")
+    plt.plot(ratings_esti_mean[:,25], label="estimated mean rating")
+    plt.xlabel("T")
+    plt.title("estimated rating of film 25")
+    plt.legend()
+    plt.show()
+    
+    plt.plot(ratings_taken_ucb,label="ucb rating")
+    plt.plot(ratings_taken_mean, label="estimated mean rating")
     plt.xlabel("T")
     plt.title("estimated rating")
     plt.legend()
@@ -161,6 +174,7 @@ def bandit_plot(regrets, ratings, ratings_esti_mean, ratings_ucb, films_rec, mov
     plt.xlabel("T")
     plt.ylabel("Regret cumulé")
     plt.title("LinUCB Regret cumulé")
+    
     
     plt.subplot(122)
     xs = [np.sqrt(i)*np.log(i) for i in range(1,len(regrets)+1)]
@@ -174,7 +188,7 @@ if 'movielens_data' not in locals():
     print('preparing data')
     movielens_data = MovieLensData()
 
-niter = 500
+niter = 100
 alpha = 1.2
 lambda_theta = 1.1
 lambda_beta = 1.2
@@ -184,7 +198,7 @@ lin_ucb = LinUCB(movielens_data, alpha, lambda_theta, lambda_beta, delta)
 user = [0]
 
 start = time.time()
-regrets, ratings, ratings_esti_mean, ratings_ucb, films_rec = lin_ucb.fit(user, niter)
+regrets, ratings, ratings_esti_mean, ratings_ucb, ratings_taken_mean, ratings_taken_ucb, films_rec = lin_ucb.fit(user, niter)
 end = time.time()
 print("time used: {}".format(end - start))
-bandit_plot(regrets, ratings, ratings_esti_mean, ratings_ucb, films_rec, movielens_data, lin_ucb, user[0])
+bandit_plot(regrets, ratings, ratings_esti_mean, ratings_ucb, ratings_taken_mean, ratings_taken_ucb, films_rec, movielens_data, lin_ucb, user[0])
