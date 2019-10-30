@@ -20,7 +20,7 @@ from collections import Counter
 import numpy as np
 
 class LinUCB:
-    def __init__(self, movielens_data, alpha = 1, lambda_ = 1, delta = 0):
+    def __init__(self, movielens_data, alpha=1, lambda_theta=1, lambda_beta=1, delta=0):
         self.data = movielens_data
         self.alpha = alpha
         self.delta = delta
@@ -35,10 +35,10 @@ class LinUCB:
         self.d = self.x.shape[1]
         self.k = self.d
         
-        self.A = np.repeat(np.identity(self.d)[np.newaxis, :, :] * lambda_, self.n_movies, axis=0)
+        self.A = np.repeat(np.identity(self.d)[np.newaxis, :, :] * lambda_theta, self.n_movies, axis=0)
         self.b = np.repeat(np.zeros(self.d)[np.newaxis, :], self.n_movies, axis=0)
         self.B = np.repeat(np.zeros((self.d, self.k))[np.newaxis, :, :], self.n_movies, axis=0)
-        self.A0 = np.identity(self.k)* lambda_
+        self.A0 = np.identity(self.k)* lambda_beta
         self.b0 = np.zeros((self.k))
         
         
@@ -48,6 +48,7 @@ class LinUCB:
         self.first_add = np.zeros((self.n_movies))
 
     def choose_arm(self, user):
+        mean_t = np.zeros((self.n_movies))
         p_t = np.zeros((self.n_movies))
         A0_inv = np.linalg.inv(self.A0)
         
@@ -67,29 +68,39 @@ class LinUCB:
             Ba = self.B[a]
             
             self.theta[a] = Aa_inv.dot(self.b[a] - Ba.dot(self.beta))
-            s_ta = z.transpose().dot(A0_inv).dot(z)
-            s_ta -= 2*z.transpose().dot(A0_inv).dot(Ba.transpose()).dot(Aa_inv).dot(x)
-            s_ta += x.transpose().dot(Aa_inv).dot(x)
-            s_ta += x.transpose().dot(Aa_inv).dot(Ba).dot(A0_inv).dot(Ba.transpose()).dot(Aa_inv).dot(x)
+            s_ta = z.transpose().dot(A0_inv).dot(z) \
+                    -2*z.transpose().dot(A0_inv).dot(Ba.transpose()).dot(Aa_inv).dot(x)\
+                    +x.transpose().dot(Aa_inv).dot(x)\
+                    +x.transpose().dot(Aa_inv).dot(Ba).dot(A0_inv).dot(Ba.transpose()).dot(Aa_inv).dot(x)
             if s_ta < 0:
                 print("damn it something's going wrong with {}th film".format(a))
+                p_t[a] = -1e2
                 continue
-            p_t[a] = z.transpose().dot(self.beta)+x.transpose().dot(self.theta[a,:]) + self.alpha * np.sqrt(s_ta)
+            mean_t[a] = z.transpose().dot(self.beta)+x.transpose().dot(self.theta[a,:])
+            p_t[a] = mean_t[a] + self.alpha * np.sqrt(s_ta)
         
         #choose arm
-        best_arms = np.flatnonzero(p_t == p_t.max())
+        p_t_max = p_t.max()
+        if p_t_max == -1e2:
+            return -1,0,0
+        best_arms = np.flatnonzero(p_t == p_t_max)
         a = np.random.choice(best_arms) # choose with ties broken
-        return a
+        return a, mean_t[a], p_t[a]
     
     def fit(self, users, T = 50):
         regrets = []
         ratings = []
         films_rec = []
+        ratings_ucb = []
+        ratings_esti_mean = []
         
         regret = 0
         for i in range(T):
             for user in users:
-                a = self.choose_arm(user)
+                a, mean_t, p_t_max = self.choose_arm(user)
+                if a == -1:
+                    print("we don't get a film recommendation for user {}".format(user))
+                    continue
                 
                 x = self.x[a,:].reshape(-1,1)
                 z = self.z[a,:].reshape(-1,1)
@@ -113,19 +124,35 @@ class LinUCB:
                 regrets.append(regret)
                 ratings.append(r)
                 films_rec.append(a)
+                ratings_esti_mean.append(mean_t)
+                ratings_ucb.append(p_t_max)
             
-        return regrets, ratings, films_rec
+        return regrets, ratings, ratings_esti_mean, ratings_ucb, films_rec
     
-def bandit_plot(regrets, ratings, films_rec):
+def bandit_plot(regrets, ratings, ratings_esti_mean, ratings_ucb, films_rec, movielens_data, lin_ucb, user):
     films = Counter(films_rec)
-    plt.bar(np.arange(len(films.keys())), films.values())
-    plt.xticks(np.arange(len(films.keys())), films.keys())
+    films_keys = list(films.keys())
+    
+    fig, ax = plt.subplots()  
+    ax.bar(np.arange(len(films.keys())), films.values())
+    plt.xticks(np.arange(len(films.keys())), films_keys)
+    for i, v in enumerate(films.values()):
+        ax.text(i-0.2, v+0.1, str(int(movielens_data.M[lin_ucb.users[user],films_keys[i]]*5)), fontweight='bold')
     plt.title("film recommendation frequence")
     plt.show()
     
+    
+    
     plt.plot(ratings)
     plt.xlabel("T")
-    plt.title("rating")
+    plt.title("real rating")
+    plt.show()
+    
+    plt.plot(ratings_ucb,label="ucb rating")
+    plt.plot(ratings_esti_mean, label="estimated mean rating")
+    plt.xlabel("T")
+    plt.title("estimated rating")
+    plt.legend()
     plt.show()
     
     plt.figure(figsize=(13,6))
@@ -138,7 +165,7 @@ def bandit_plot(regrets, ratings, films_rec):
     plt.subplot(122)
     xs = [np.sqrt(i)*np.log(i) for i in range(1,len(regrets)+1)]
     plt.plot(xs, regrets)
-    plt.xlabel("log(T)")
+    plt.xlabel("sart(T)*log(T)")
     plt.ylabel("Regret cumulé")
     plt.title("LinUCB Regret cumulé")
     plt.show()
@@ -148,15 +175,16 @@ if 'movielens_data' not in locals():
     movielens_data = MovieLensData()
 
 niter = 500
-alpha = 1
-lambda_ = 1
-delta = 0. # noise
-lin_ucb = LinUCB(movielens_data, alpha, lambda_, delta)
+alpha = 1.2
+lambda_theta = 1.1
+lambda_beta = 1.2
+delta = 0.01 # noise
+lin_ucb = LinUCB(movielens_data, alpha, lambda_theta, lambda_beta, delta)
 
 user = [0]
 
 start = time.time()
-regrets, ratings, films_rec = lin_ucb.fit(user, niter)
+regrets, ratings, ratings_esti_mean, ratings_ucb, films_rec = lin_ucb.fit(user, niter)
 end = time.time()
 print("time used: {}".format(end - start))
-bandit_plot(regrets, ratings, films_rec)
+bandit_plot(regrets, ratings, ratings_esti_mean, ratings_ucb, films_rec, movielens_data, lin_ucb, user[0])
