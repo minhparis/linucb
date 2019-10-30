@@ -11,8 +11,8 @@ import matplotlib.pyplot as plt
 from sklearn.preprocessing import normalize
 from LinUCB_dataPre import MovieLensData
 import time
-from collections import Counter
 import numpy as np
+import bandit_plotting
 
 class LinUCB:
     def __init__(self, movielens_data, alpha = 1, lambda_ = 1, delta = 0):
@@ -25,8 +25,8 @@ class LinUCB:
         self.n_users = self.users.shape[0]
         
         # append constant 1 to every movie vector
-        self.X = np.concatenate((movielens_data.Vt.transpose(), np.ones((self.n_movies,1))), axis = 1)
-
+        #self.X = np.concatenate((movielens_data.Vt.transpose(), np.ones((self.n_movies,1))), axis = 1)
+        self.X = movielens_data.Vt.transpose()
         self.d = self.X.shape[1]
         
         self.A = np.repeat(np.identity(self.d)[np.newaxis, :, :] * lambda_, self.n_movies, axis=0)
@@ -83,32 +83,12 @@ class LinUCB:
             
         return regrets, ratings, films_rec
     
-def bandit_plot(regrets, ratings, films_rec):
-    films = Counter(films_rec)
-    plt.bar(np.arange(len(films.keys())), films.values())
-    plt.xticks(np.arange(len(films.keys())), films.keys())
-    plt.title("film recommendation frequence")
-    plt.show()
-    
-    plt.plot(ratings)
-    plt.xlabel("T")
-    plt.title("rating")
-    plt.show()
-    
-    plt.figure(figsize=(13,6))
-    plt.subplot(121)
-    plt.plot(regrets)
-    plt.xlabel("T")
-    plt.ylabel("Regret cumulé")
-    plt.title("LinUCB Regret cumulé")
-    
-    plt.subplot(122)
-    xs = [np.sqrt(i)*np.log(i) for i in range(1,len(regrets)+1)]
-    plt.plot(xs, regrets)
-    plt.xlabel("sqrt(T)*log(T)")
-    plt.ylabel("Regret cumulé")
-    plt.title("LinUCB Regret cumulé")
-    plt.show()
+def bandit_plot(regrets, ratings, films_rec, all_films_rewards):
+    bandit_plotting.plot_cum_regrets(regrets,"LinUCB", xsqrtlog=False)
+    bandit_plotting.plot_cum_regrets(regrets,"LinUCB", xsqrtlog=True)
+    bandit_plotting.films_freq_rewards(films_rec, all_films_rewards)
+    bandit_plotting.all_films_rewards(all_films_rewards)
+    bandit_plotting.ratings(ratings)
 
 if 'movielens_data' not in locals():
     print('preparing data')
@@ -126,4 +106,6 @@ start = time.time()
 regrets, ratings, films_rec = lin_ucb.fit(user, niter)
 end = time.time()
 print("time used: {}".format(end - start))
-bandit_plot(regrets, ratings, films_rec)
+
+all_films_rewards = lin_ucb.data.reward(lin_ucb.users[user],np.arange(lin_ucb.n_movies))
+bandit_plot(regrets, ratings, films_rec, all_films_rewards)
