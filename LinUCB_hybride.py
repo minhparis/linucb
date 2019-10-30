@@ -9,7 +9,8 @@ Created on Tue Oct 29 20:54:51 2019
 """
 
 # There's a bug calculating s_ta, in many cases it will be negative which is clearly wrong.
-# still didn't figure out where the error come from
+# If this happens, the algo probably won't converge
+# Or maybe it's because the parameters are not appropriate
 
 import matplotlib.pyplot as plt
 from sklearn.preprocessing import normalize
@@ -28,8 +29,6 @@ class LinUCB:
         self.users = movielens_data.active_users()
         self.n_users = self.users.shape[0]
         
-        # self.x = np.concatenate((movielens_data.Vt.transpose(), np.ones((self.n_movies,1))), axis = 1)
-        # self.z = np.concatenate((movielens_data.Vt.transpose(), np.ones((self.n_movies,1))), axis = 1)
         self.x = movielens_data.Vt.transpose()
         self.z = movielens_data.Vt.transpose()
         
@@ -38,8 +37,8 @@ class LinUCB:
         
         self.A = np.repeat(np.identity(self.d)[np.newaxis, :, :] * lambda_, self.n_movies, axis=0)
         self.b = np.repeat(np.zeros(self.d)[np.newaxis, :], self.n_movies, axis=0)
-        self.B = np.repeat(np.zeros((self.d, self.k))[np.newaxis, :, :] * lambda_, self.n_movies, axis=0)
-        self.A0 = np.identity(self.k)
+        self.B = np.repeat(np.zeros((self.d, self.k))[np.newaxis, :, :], self.n_movies, axis=0)
+        self.A0 = np.identity(self.k)* lambda_
         self.b0 = np.zeros((self.k))
         
         
@@ -67,7 +66,7 @@ class LinUCB:
             Aa_inv = np.linalg.inv(self.A[a])
             Ba = self.B[a]
             
-            self.theta[a] = np.dot(Aa_inv, self.b[a])
+            self.theta[a] = Aa_inv.dot(self.b[a] - Ba.dot(self.beta))
             s_ta = z.transpose().dot(A0_inv).dot(z)
             s_ta -= 2*z.transpose().dot(A0_inv).dot(Ba.transpose()).dot(Aa_inv).dot(x)
             s_ta += x.transpose().dot(Aa_inv).dot(x)
@@ -139,7 +138,7 @@ def bandit_plot(regrets, ratings, films_rec):
     plt.subplot(122)
     xs = [np.sqrt(i)*np.log(i) for i in range(1,len(regrets)+1)]
     plt.plot(xs, regrets)
-    plt.xlabel("sqrt(T)*log(T)")
+    plt.xlabel("log(T)")
     plt.ylabel("Regret cumulé")
     plt.title("LinUCB Regret cumulé")
     plt.show()
