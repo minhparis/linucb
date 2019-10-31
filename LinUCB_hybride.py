@@ -13,7 +13,7 @@ Created on Tue Oct 29 20:54:51 2019
 # Or maybe it's because the parameters are not appropriate
 
 import matplotlib.pyplot as plt
-from sklearn.preprocessing import normalize
+# from sklearn.preprocessing import normalize
 from LinUCB_dataPre import MovieLensData
 import time
 from collections import Counter
@@ -29,11 +29,12 @@ class LinUCB:
         self.users = movielens_data.active_users()
         self.n_users = self.users.shape[0]
         
-        self.x = movielens_data.Vt.transpose()
-        self.z = movielens_data.Vt.transpose()
-        
-        self.d = self.x.shape[1]
+        self.d = self.data.Vt.shape[0]
         self.k = self.d
+        
+        # self.x = movielens_data.Vt.transpose()
+        self.x = np.zeros((self.n_movies, self.d)) / self.d
+        self.z = movielens_data.Vt.transpose()
         
         self.A = np.repeat(np.identity(self.d)[np.newaxis, :, :] * lambda_theta, self.n_movies, axis=0)
         self.b = np.repeat(np.zeros(self.d)[np.newaxis, :], self.n_movies, axis=0)
@@ -154,8 +155,9 @@ def bandit_plot(regrets, ratings, ratings_esti_mean, ratings_ucb, ratings_taken_
     plt.title("real rating")
     plt.show()
     
-    plt.plot(ratings_ucb[:,25],label="ucb rating")
-    plt.plot(ratings_esti_mean[:,25], label="estimated mean rating")
+    for movie in films_keys:
+        plt.plot(ratings_ucb[:,movie],label="ucb rating {}".format(movie))
+        plt.plot(ratings_esti_mean[:,movie], label="estimated mean rating {}".format(movie))
     plt.xlabel("T")
     plt.title("estimated rating of film 25")
     plt.legend()
@@ -188,11 +190,11 @@ if 'movielens_data' not in locals():
     print('preparing data')
     movielens_data = MovieLensData()
 
-niter = 100
-alpha = 1.2
-lambda_theta = 1.1
-lambda_beta = 1.2
-delta = 0.01 # noise
+niter = 1000
+alpha = 1.4
+lambda_theta = 1.0
+lambda_beta = 1.0
+delta = 0. # noise
 lin_ucb = LinUCB(movielens_data, alpha, lambda_theta, lambda_beta, delta)
 
 user = [0]
