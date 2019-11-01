@@ -94,9 +94,9 @@ def bandit_plot(regrets, ratings, films_rec, ratings_taken_mean, ratings_taken_u
     bandit_plotting.plot_cum_regrets(regrets,"LinUCB", xsqrtlog=False)
     bandit_plotting.plot_cum_regrets(regrets,"LinUCB", xsqrtlog=True)
     bandit_plotting.films_freq_rewards(films_rec, all_films_rewards)
-    bandit_plotting.all_films_rewards(all_films_rewards)
+    # bandit_plotting.all_films_rewards(all_films_rewards)
     bandit_plotting.ratings(ratings)
-    bandit_plotting.rating_T(ratings_taken_mean, ratings_taken_ucb)
+    bandit_plotting.rating_estimated(ratings_taken_mean, ratings_taken_ucb)
     
 if 'movielens_data' not in locals():
     print('preparing data')

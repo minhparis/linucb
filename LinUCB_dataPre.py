@@ -16,13 +16,9 @@ from scipy.sparse.linalg import svds
 # Data Preperation
 class MovieLensData:
     """
-MovieLens datas
-MovieLens dataset prepared for LinUCB
-"""
-
-# Data Preperation
-class MovieLensData:
-
+    MovieLens datas
+    MovieLens dataset prepared for LinUCB
+    """
     def __init__(self, d=30):
         '''d <int> is effectively the number of features'''
         self.n_users = 0

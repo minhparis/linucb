@@ -8,16 +8,10 @@ Created on Tue Oct 29 20:54:51 2019
 @author: DANG
 """
 
-# There's a bug calculating s_ta, in many cases it will be negative which is clearly wrong.
-# If this happens, the algo probably won't converge
-# Or maybe it's because the parameters are not appropriate
-
-import matplotlib.pyplot as plt
-# from sklearn.preprocessing import normalize
-from LinUCB_dataPre import MovieLensData
-import time
-from collections import Counter
 import numpy as np
+import time
+from LinUCB_dataPre import MovieLensData
+import bandit_plotting
 
 class LinUCB:
     def __init__(self, movielens_data, alpha=1, lambda_theta=1, lambda_beta=1, delta=0):
@@ -131,74 +125,33 @@ class LinUCB:
         ratings_ucb = np.vstack(ratings_ucb)
         return regrets, ratings, ratings_esti_mean, ratings_ucb, ratings_taken_mean, ratings_taken_ucb, films_rec
     
-def bandit_plot(regrets, ratings, ratings_esti_mean, ratings_ucb, ratings_taken_mean, ratings_taken_ucb, films_rec, movielens_data, lin_ucb, user):
-    films = Counter(films_rec)
-    films_keys = list(films.keys())
-    if len(films_keys) > 10:
-        pairs = dict(sorted(films.items(), key=lambda x: x[1], reverse=True)[:10])
-    else:
-        pairs = dict(sorted(films.items(), key=lambda x: x[1], reverse=True))
-    pairs_keys = list(pairs.keys())
-    fig, ax = plt.subplots()  
-    ax.bar(np.arange(len(pairs.keys())), pairs.values())
-    plt.xticks(np.arange(len(pairs.keys())), pairs_keys)
-    for i, v in enumerate(pairs.values()):
-        ax.text(i-0.2, v+0.1, str(int(movielens_data.M[lin_ucb.users[user],pairs_keys[i]]*5)), fontweight='bold')
-    plt.title("film recommendation frequence")
-    plt.show()
+def bandit_plot(regrets, ratings, r_mean, r_ucb, r_taken_mean, r_taken_ucb, films_rec, data, lin_ucb, user):
+    bandit_plotting.films_freq_rewards_2(films_rec, user, data, lin_ucb)
+    bandit_plotting.ratings(ratings)
     
+    bandit_plotting.ratings_estimated(films_rec, r_mean, flag = 'mean')
+    bandit_plotting.ratings_estimated(films_rec, r_ucb, flag = 'ucb')
     
-    plt.plot(ratings)
-    plt.xlabel("T")
-    plt.title("real rating")
-    plt.show()
+    bandit_plotting.rating_estimated(r_taken_mean, r_taken_ucb)
     
-    for movie in pairs_keys:
-        plt.plot(ratings_ucb[:,movie],label="ucb rating {}".format(movie))
-        # plt.plot(ratings_esti_mean[:,movie], label="estimated mean rating {}".format(movie))
-    plt.xlabel("T")
-    plt.title("estimated rating of films mostly recommended")
-    plt.legend()
-    plt.show()
-    
-    plt.plot(ratings_taken_ucb,label="ucb rating")
-    plt.plot(ratings_taken_mean, label="estimated mean rating")
-    plt.xlabel("T")
-    plt.title("estimated rating of films recommended")
-    plt.legend()
-    plt.show()
-    
-    plt.figure(figsize=(13,6))
-    plt.subplot(121)
-    plt.plot(regrets)
-    plt.xlabel("T")
-    plt.ylabel("Regret cumulé")
-    plt.title("LinUCB Regret cumulé")
-    
-    
-    plt.subplot(122)
-    xs = [np.sqrt(i)*np.log(i) for i in range(1,len(regrets)+1)]
-    plt.plot(xs, regrets)
-    plt.xlabel("sqrt(T)*log(T)")
-    plt.ylabel("Regret cumulé")
-    plt.title("LinUCB Regret cumulé")
-    plt.show()
+    bandit_plotting.plot_cum_regrets(regrets,"LinUCB", xsqrtlog=False)
+    bandit_plotting.plot_cum_regrets(regrets,"LinUCB", xsqrtlog=True)
 
-if 'movielens_data' not in locals():
+if 'data' not in locals():
     print('preparing data')
-    movielens_data = MovieLensData()
+    data = MovieLensData()
 
-niter = 500
+niter = 300
 alpha = 1.4
 lambda_theta = 1.0
 lambda_beta = 1.0
 delta = 0. # noise
-lin_ucb = LinUCB(movielens_data, alpha, lambda_theta, lambda_beta, delta)
+lin_ucb = LinUCB(data, alpha, lambda_theta, lambda_beta, delta)
 
-user = [0,1]
+user = [0,1,2]
 
 start = time.time()
-regrets, ratings, ratings_esti_mean, ratings_ucb, ratings_taken_mean, ratings_taken_ucb, films_rec = lin_ucb.fit(user, niter)
+regrets, ratings, r_esti_mean, r_ucb, r_taken_mean, r_taken_ucb, films_rec = lin_ucb.fit(user, niter)
 end = time.time()
 print("time used: {}".format(end - start))
-bandit_plot(regrets, ratings, ratings_esti_mean, ratings_ucb, ratings_taken_mean, ratings_taken_ucb, films_rec, movielens_data, lin_ucb, user[0])
+bandit_plot(regrets, ratings, r_esti_mean, r_ucb, r_taken_mean, r_taken_ucb, films_rec, data, lin_ucb, user)

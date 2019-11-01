@@ -55,6 +55,32 @@ def films_freq_rewards(films_rec, all_films_rewards):
     ax2.grid(None)
     fig.tight_layout()
     fig.savefig("fims_freq_rewards.png", format='png', bbox_inches='tight', dpi=400)
+    
+
+def films_freq_rewards_2(films_rec, user, data, lin_ucb):
+    '''bar chart of films frequency with real mean score on top.
+        scores are mean values of users in the parameter'''
+    films = Counter(films_rec)
+    films_keys = list(films.keys())
+    if len(films_keys) > 10:
+        pairs = dict(sorted(films.items(), key=lambda x: x[1], reverse=True)[:10])
+    else:
+        pairs = dict(sorted(films.items(), key=lambda x: x[1], reverse=True))
+    pairs_keys = list(pairs.keys())
+    fig, ax = plt.subplots()  
+    ax.bar(np.arange(len(pairs.keys())), pairs.values())
+    plt.xticks(np.arange(len(pairs.keys())), pairs_keys)
+    for i, v in enumerate(pairs.values()):
+        r = 0
+        for u in user:
+            tmp = int(data.M[lin_ucb.users[u],pairs_keys[i]]*5)
+            if tmp == 0:
+                tmp = data.mean_rating(i)
+            r += tmp
+        ax.text(i-0.2, v+0.1, "{:.1f}".format(r/len(user)), fontweight='bold')
+    plt.title("film recommendation frequence")
+    plt.show()
+    
 
 def all_films_rewards(all_films_rewards):
     '''Visualize rewards of all films to verify that extremely high rewards are scarce
@@ -68,6 +94,8 @@ def all_films_rewards(all_films_rewards):
     fig.savefig("all_films_rewards.png", format='png', bbox_inches='tight', dpi=400)
 
 def ratings(ratings):
+    '''1. ratings - T plot
+       2. pie chart of frequency of ratings '''
     fig, ax = plt.subplots()
     if len(ratings) > 300:
         tmp = np.mean(np.array(ratings).reshape(-1,5),axis=1)
@@ -86,11 +114,31 @@ def ratings(ratings):
     plt.title('ratings')
     plt.show()
     
-def rating_T(ratings_taken_mean, ratings_taken_ucb):
+def rating_estimated(r_taken_mean, r_taken_ucb):
+    ''' estimated scores(mean and ucb) of movies chosen by linUCB- T plot '''
     fig, ax = plt.subplots()
-    ax.plot(ratings_taken_mean, label='mean rating')
-    ax.plot(ratings_taken_ucb, label='ucb rating')
+    ax.plot(r_taken_mean, label='mean rating')
+    ax.plot(r_taken_ucb, label='ucb rating')
     ax.set_xlabel("T")
     ax.set_ylabel("rating")
     ax.set_title("estimated rating")
+    plt.show()
+
+def ratings_estimated(films_rec, ratings, flag = 'mean'):
+    '''estimated scores(mean and ucb) of certain movies - T plot
+        the goal is to represent the evaluation of estimation score of movies
+        flag: mean or ucb'''
+    films = Counter(films_rec)
+    films_keys = list(films.keys())
+    if len(films_keys) > 10:
+        pairs = dict(sorted(films.items(), key=lambda x: x[1], reverse=True)[:10])
+    else:
+        pairs = dict(sorted(films.items(), key=lambda x: x[1], reverse=True))
+    pairs_keys = list(pairs.keys())
+    
+    for movie in pairs_keys:
+        plt.plot(ratings[:,movie],label="{} rating {}".format(flag, movie))
+    plt.xlabel("T")
+    plt.title("estimated {} rating of films mostly recommended".format(flag))
+    plt.legend()
     plt.show()
