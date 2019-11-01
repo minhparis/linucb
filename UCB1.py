@@ -88,23 +88,28 @@ class LinUCB:
                 regret += 1. - r
                 regrets.append(regret)
                 ratings.append(r)
-                films_rec.append(a)
+                if UCB > 0:
+                    films_rec.append(a)
                 ratings_taken_ucb.append(UCB)
                 ratings_taken_mean.append(esti_mean)
                 
         return regrets, ratings, films_rec, ratings_taken_mean, ratings_taken_ucb
     
 def bandit_plot(regrets, ratings, films_rec, ratings_taken_mean, ratings_taken_ucb, movielens_data, lin_ucb, user):
-    # films = Counter(films_rec)
-    # films_keys = list(films.keys())
-    
-    # fig, ax = plt.subplots()  
-    # ax.bar(np.arange(len(films.keys())), films.values())
-    # plt.xticks(np.arange(len(films.keys())), films_keys)
-    # for i, v in enumerate(films.values()):
-    #     ax.text(i-0.2, v+0.1, str(int(movielens_data.M[lin_ucb.users[user],films_keys[i]]*5)), fontweight='bold')
-    # plt.title("film recommendation frequence")
-    # plt.show()
+    films = Counter(films_rec)
+    films_keys = list(films.keys())
+    if len(films_keys) > 10:
+        pairs = dict(sorted(films.items(), key=lambda x: x[1], reverse=True)[:10])
+    else:
+        pairs = dict(sorted(films.items(), key=lambda x: x[1], reverse=True))
+    pairs_keys = list(pairs.keys())
+    fig, ax = plt.subplots()  
+    ax.bar(np.arange(len(pairs.keys())), pairs.values())
+    plt.xticks(np.arange(len(pairs.keys())), pairs_keys)
+    for i, v in enumerate(pairs.values()):
+        ax.text(i-0.2, v+0.1, str(int(movielens_data.M[lin_ucb.users[user],pairs_keys[i]]*5)), fontweight='bold')
+    plt.title("film recommendation frequence")
+    plt.show()
     
     
     plt.plot(ratings)
@@ -138,7 +143,7 @@ def bandit_plot(regrets, ratings, films_rec, ratings_taken_mean, ratings_taken_u
     plt.subplot(122)
     xs = [np.sqrt(i)*np.log(i) for i in range(1,len(regrets)+1)]
     plt.plot(xs, regrets)
-    plt.xlabel("sart(T)*log(T)")
+    plt.xlabel("sqrt(T)*log(T)")
     plt.ylabel("Regret cumulé")
     plt.title("LinUCB Regret cumulé")
     plt.show()
@@ -148,7 +153,7 @@ if 'movielens_data' not in locals():
     movielens_data = MovieLensData()
 
 niter = 3000
-alpha = 0.2
+alpha = 0.3
 delta = 0. # noise
 lin_ucb = LinUCB(movielens_data, alpha, delta)
 
