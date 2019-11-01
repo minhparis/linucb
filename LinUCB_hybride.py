@@ -61,9 +61,6 @@ class LinUCB:
             z = self.z[a,:].reshape(-1,1)
             
             r = self.data.reward(self.users[user], a)
-            if r == 0:
-                p_t[a] = 0
-                continue
             
             Aa_inv = np.linalg.inv(self.A[a])
             Ba = self.B[a]
@@ -110,8 +107,8 @@ class LinUCB:
                 r = self.data.reward(self.users[user], a) + np.random.normal(0,self.delta)
                 
                 if r == 0:
-                    print('this film has not a score')
-                    continue
+                    print('this film has not a score, using mean score')
+                    r = self.data.mean_rating(a)
                 
                 Aa_inv = np.linalg.inv(self.A[a])
                 
@@ -139,12 +136,16 @@ class LinUCB:
 def bandit_plot(regrets, ratings, ratings_esti_mean, ratings_ucb, ratings_taken_mean, ratings_taken_ucb, films_rec, movielens_data, lin_ucb, user):
     films = Counter(films_rec)
     films_keys = list(films.keys())
-    
+    if len(films_keys) > 10:
+        pairs = dict(sorted(films.items(), key=lambda x: x[1], reverse=True)[:10])
+    else:
+        pairs = dict(sorted(films.items(), key=lambda x: x[1], reverse=True))
+    pairs_keys = list(pairs.keys())
     fig, ax = plt.subplots()  
-    ax.bar(np.arange(len(films.keys())), films.values())
-    plt.xticks(np.arange(len(films.keys())), films_keys)
-    for i, v in enumerate(films.values()):
-        ax.text(i-0.2, v+0.1, str(int(movielens_data.M[lin_ucb.users[user],films_keys[i]]*5)), fontweight='bold')
+    ax.bar(np.arange(len(pairs.keys())), pairs.values())
+    plt.xticks(np.arange(len(pairs.keys())), pairs_keys)
+    for i, v in enumerate(pairs.values()):
+        ax.text(i-0.2, v+0.1, str(int(movielens_data.M[lin_ucb.users[user],pairs_keys[i]]*5)), fontweight='bold')
     plt.title("film recommendation frequence")
     plt.show()
     
@@ -155,18 +156,18 @@ def bandit_plot(regrets, ratings, ratings_esti_mean, ratings_ucb, ratings_taken_
     plt.title("real rating")
     plt.show()
     
-    for movie in films_keys:
+    for movie in pairs_keys:
         plt.plot(ratings_ucb[:,movie],label="ucb rating {}".format(movie))
-        plt.plot(ratings_esti_mean[:,movie], label="estimated mean rating {}".format(movie))
+        # plt.plot(ratings_esti_mean[:,movie], label="estimated mean rating {}".format(movie))
     plt.xlabel("T")
-    plt.title("estimated rating of film 25")
+    plt.title("estimated rating of films mostly recommended")
     plt.legend()
     plt.show()
     
     plt.plot(ratings_taken_ucb,label="ucb rating")
     plt.plot(ratings_taken_mean, label="estimated mean rating")
     plt.xlabel("T")
-    plt.title("estimated rating")
+    plt.title("estimated rating of films recommended")
     plt.legend()
     plt.show()
     
@@ -181,7 +182,7 @@ def bandit_plot(regrets, ratings, ratings_esti_mean, ratings_ucb, ratings_taken_
     plt.subplot(122)
     xs = [np.sqrt(i)*np.log(i) for i in range(1,len(regrets)+1)]
     plt.plot(xs, regrets)
-    plt.xlabel("sart(T)*log(T)")
+    plt.xlabel("sqrt(T)*log(T)")
     plt.ylabel("Regret cumulé")
     plt.title("LinUCB Regret cumulé")
     plt.show()
@@ -197,7 +198,7 @@ lambda_beta = 1.0
 delta = 0. # noise
 lin_ucb = LinUCB(movielens_data, alpha, lambda_theta, lambda_beta, delta)
 
-user = [0]
+user = [0,1,2]
 
 start = time.time()
 regrets, ratings, ratings_esti_mean, ratings_ucb, ratings_taken_mean, ratings_taken_ucb, films_rec = lin_ucb.fit(user, niter)

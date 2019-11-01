@@ -80,6 +80,10 @@ class MovieLensData:
 
     def active_users(self):
         return np.argwhere((self.M != 0).sum(1) > 150).flatten()
+    
+    def mean_rating(self, movie):
+        non_nul = np.argwhere(self.M[:,movie] != 0).flatten()
+        return np.mean(self.M[non_nul,movie])
 
 #utility
 def sparsity(arr):
