@@ -76,7 +76,10 @@ class MovieLensData:
         return U, Vt, M
     
     def reward(self, user, item):
-        return self.M[user, item]
+        if type(user) == np.int64:
+            return self.M[user,item]
+        else:
+            return self.M[user,:][:,item]
 
     def active_users(self):
         return np.argwhere((self.M != 0).sum(1) > 150).flatten()

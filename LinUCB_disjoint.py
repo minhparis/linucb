@@ -39,73 +39,81 @@ class LinUCB:
 
     def choose_arm(self, user):
         p_t = np.zeros((self.n_movies))
+        p_t_mean = np.zeros((self.n_movies))
         self.theta = np.zeros((self.n_movies, self.d))
         
         for a in range(self.n_movies):
             x = self.X[a,:].reshape(-1,1)
             r = self.data.reward(self.users[user], a)
-            if r == 0:
-                p_t[a] = -1e2
-                continue
+            # if r == 0:
+            #     p_t[a] = -1e2
+            #     continue
             A_a_inv = np.linalg.inv(self.A[a])
             self.theta[a,:] = np.dot(A_a_inv, self.b[a].transpose()).transpose()
-            p_t[a] = np.dot(self.theta[a,:], x) + self.alpha * np.sqrt(np.dot(np.dot(x.transpose(), A_a_inv), x))
+            p_t_mean[a] = np.dot(self.theta[a,:], x)
+            p_t[a] = p_t_mean[a] + self.alpha * np.sqrt(x.transpose().dot(A_a_inv).dot(x))
         #choose arm
         best_arms = np.flatnonzero(p_t == p_t.max())
         # print('pta: \n{}'.format(p_t))
         # print('max: {}, \nfilm: \n{}'.format(p_t.max(), best_arms))
         a = np.random.choice(best_arms) # choose with ties broken
-        return a
+        return a, p_t_mean[a], p_t[a]
     
-    def fit(self, user, T = 50):
+    def fit(self, users, T = 50):
         regrets = []
         ratings = []
         films_rec = []
+        ratings_taken_mean = [] #mean score of chosen movies
+        ratings_taken_ucb = [] #ucb score of chosen movies
         
         regret = 0
         for i in range(T):
-            a = self.choose_arm(user)
+            for user in users:
+                a, p_t_mean, p_ta = self.choose_arm(user)
+                
+                x = self.X[a,:].reshape(-1,1)
+                r = self.data.reward(self.users[user], a) + np.random.normal(0,self.delta)
+                
+                if r == 0:
+                    print('this film has not a score, using mean score')
+                    r = self.data.mean_rating(a)
+                
+                self.A[a] += np.dot(x, x.transpose())
+                self.b[a] += (r * x).flatten()
+                
+                regret += 1. - r
+                regrets.append(regret)
+                ratings.append(r)
+                films_rec.append(a)
+                ratings_taken_mean.append(p_t_mean)
+                ratings_taken_ucb.append(p_ta)
             
-            x = self.X[a,:].reshape(-1,1)
-            r = self.data.reward(self.users[user], a) + np.random.normal(0,self.delta)
-            
-            if r == 0:
-                print('this film has not a score')
-                continue
-            
-            self.A[a] += np.dot(x, x.transpose())
-            self.b[a] += (r * x).flatten()
-            
-            regret += 1. - r
-            regrets.append(regret)
-            ratings.append(r)
-            films_rec.append(a)
-            
-        return regrets, ratings, films_rec
+        return regrets, ratings, films_rec, ratings_taken_mean, ratings_taken_ucb
     
-def bandit_plot(regrets, ratings, films_rec, all_films_rewards):
+def bandit_plot(regrets, ratings, films_rec, ratings_taken_mean, ratings_taken_ucb, all_films_rewards):
     bandit_plotting.plot_cum_regrets(regrets,"LinUCB", xsqrtlog=False)
     bandit_plotting.plot_cum_regrets(regrets,"LinUCB", xsqrtlog=True)
     bandit_plotting.films_freq_rewards(films_rec, all_films_rewards)
     bandit_plotting.all_films_rewards(all_films_rewards)
     bandit_plotting.ratings(ratings)
-
+    bandit_plotting.rating_T(ratings_taken_mean, ratings_taken_ucb)
+    
 if 'movielens_data' not in locals():
     print('preparing data')
     movielens_data = MovieLensData()
 
-niter = 500
-alpha = 2.8
-lambda_ = 2
-delta = 0. # noise
-lin_ucb = LinUCB(movielens_data, alpha, lambda_, delta)
+# niter = 300
+# alpha = 2.8
+# lambda_ = 2
+# delta = 0. # noise
+# lin_ucb = LinUCB(movielens_data, alpha, lambda_, delta)
 
-user = 0
+# users = [0,1,2]
 
-start = time.time()
-regrets, ratings, films_rec = lin_ucb.fit(user, niter)
-end = time.time()
-print("time used: {}".format(end - start))
+# start = time.time()
+# regrets, ratings, films_rec, ratings_taken_mean, ratings_taken_ucb = lin_ucb.fit(users, niter)
+# end = time.time()
+# print("time used: {}".format(end - start))
 
-all_films_rewards = lin_ucb.data.reward(lin_ucb.users[user],np.arange(lin_ucb.n_movies))
-bandit_plot(regrets, ratings, films_rec, all_films_rewards)
+# all_films_rewards = lin_ucb.data.reward(lin_ucb.users[users],np.arange(lin_ucb.n_movies))
+bandit_plot(regrets, ratings, films_rec, ratings_taken_mean, ratings_taken_ucb, all_films_rewards[0])

@@ -148,7 +148,6 @@ def bandit_plot(regrets, ratings, ratings_esti_mean, ratings_ucb, ratings_taken_
     plt.show()
     
     
-    
     plt.plot(ratings)
     plt.xlabel("T")
     plt.title("real rating")
@@ -189,14 +188,14 @@ if 'movielens_data' not in locals():
     print('preparing data')
     movielens_data = MovieLensData()
 
-niter = 1000
+niter = 500
 alpha = 1.4
 lambda_theta = 1.0
 lambda_beta = 1.0
 delta = 0. # noise
 lin_ucb = LinUCB(movielens_data, alpha, lambda_theta, lambda_beta, delta)
 
-user = [0,1,2]
+user = [0,1]
 
 start = time.time()
 regrets, ratings, ratings_esti_mean, ratings_ucb, ratings_taken_mean, ratings_taken_ucb, films_rec = lin_ucb.fit(user, niter)

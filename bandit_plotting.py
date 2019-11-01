@@ -23,7 +23,6 @@ def plot_cum_regrets(regrets, algo_name, xsqrtlog=False):
         savepath = 'cum_regrets_{}.png'.format(algo_name)
     ax.plot(x,regrets,antialiased=True)
     fig.savefig(savepath, format='png', bbox_inches='tight', dpi=400)
-    fig.savefig(savepath, format='png', bbox_inches='tight', dpi=400)
 
 def films_freq_rewards(films_rec, all_films_rewards):
     '''films_rec <list> of pulled arm indices
@@ -31,7 +30,7 @@ def films_freq_rewards(films_rec, all_films_rewards):
     '''
 
     films = Counter(films_rec)
-    sorted_films_counts = films.most_common()[::-1]
+    sorted_films_counts = films.most_common()
     films_ind = [i[0] for i in sorted_films_counts]
     films_counts = [i[1] for i in sorted_films_counts]
 
@@ -55,7 +54,7 @@ def films_freq_rewards(films_rec, all_films_rewards):
     ax2.yaxis.set_major_formatter(FormatStrFormatter('%.2f'))
     ax2.grid(None)
     fig.tight_layout()
-    fig.savefig("fims_freq_rewards", format='png', bbox_inches='tight', dpi=400)
+    fig.savefig("fims_freq_rewards.png", format='png', bbox_inches='tight', dpi=400)
 
 def all_films_rewards(all_films_rewards):
     '''Visualize rewards of all films to verify that extremely high rewards are scarce
@@ -66,12 +65,32 @@ def all_films_rewards(all_films_rewards):
     ax.set_ylabel("$r_j$")
     ax.set_title("Rewards of all films")
     fig.tight_layout()
-    fig.savefig("all_films_rewards", format='png', bbox_inches='tight', dpi=400)
+    fig.savefig("all_films_rewards.png", format='png', bbox_inches='tight', dpi=400)
 
 def ratings(ratings):
     fig, ax = plt.subplots()
-    ax.plot(ratings)
-    ax.set_xlabel("t")
+    if len(ratings) > 300:
+        tmp = np.mean(np.array(ratings).reshape(-1,5),axis=1)
+        ax.plot(np.arange(0,len(ratings),5), tmp)
+    else:
+        ax.plot(ratings)
+    ax.set_xlabel("T")
     ax.set_ylabel("rating")
     ax.set_title("rating")
-    fig.savefig("ratings", format='png', bbox_inches='tight', dpi=400)
+    fig.savefig("ratings.png", format='png', bbox_inches='tight', dpi=400)
+    plt.show()
+    
+    ratin = Counter(ratings)
+    plt.pie(ratin.values(), labels=ratin.keys(), autopct='%1.1f%%', shadow=True, startangle=140)
+    plt.axis('equal')
+    plt.title('ratings')
+    plt.show()
+    
+def rating_T(ratings_taken_mean, ratings_taken_ucb):
+    fig, ax = plt.subplots()
+    ax.plot(ratings_taken_mean, label='mean rating')
+    ax.plot(ratings_taken_ucb, label='ucb rating')
+    ax.set_xlabel("T")
+    ax.set_ylabel("rating")
+    ax.set_title("estimated rating")
+    plt.show()

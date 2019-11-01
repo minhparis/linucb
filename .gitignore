@@ -4,6 +4,8 @@
 # Ignore all text files
 *.txt
 
+*.png
+
 __pycache__
 
 ml-1m
