@@ -33,7 +33,7 @@ class LinUCB:
         self.k = self.d
         
         # self.x = movielens_data.Vt.transpose()
-        self.x = np.zeros((self.n_movies, self.d)) / self.d
+        self.x = np.zeros((self.n_movies, self.d))
         self.z = movielens_data.Vt.transpose()
         
         self.A = np.repeat(np.identity(self.d)[np.newaxis, :, :] * lambda_theta, self.n_movies, axis=0)
@@ -59,8 +59,6 @@ class LinUCB:
         for a in range(self.n_movies):
             x = self.x[a,:].reshape(-1,1)
             z = self.z[a,:].reshape(-1,1)
-            
-            r = self.data.reward(self.users[user], a)
             
             Aa_inv = np.linalg.inv(self.A[a])
             Ba = self.B[a]
