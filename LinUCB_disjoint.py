@@ -44,7 +44,7 @@ class LinUCB:
         
         for a in range(self.n_movies):
             x = self.X[a,:].reshape(-1,1)
-            r = self.data.reward(self.users[user], a)
+            # r = self.data.reward(self.users[user], a)
             # if r == 0:
             #     p_t[a] = -1e2
             #     continue
@@ -102,18 +102,18 @@ if 'movielens_data' not in locals():
     print('preparing data')
     movielens_data = MovieLensData()
 
-# niter = 300
-# alpha = 2.8
-# lambda_ = 2
-# delta = 0. # noise
-# lin_ucb = LinUCB(movielens_data, alpha, lambda_, delta)
+niter = 300
+alpha = 2.8
+lambda_ = 2
+delta = 0. # noise
+lin_ucb = LinUCB(movielens_data, alpha, lambda_, delta)
 
-# users = [0,1,2]
+users = [0,1,2]
 
-# start = time.time()
-# regrets, ratings, films_rec, ratings_taken_mean, ratings_taken_ucb = lin_ucb.fit(users, niter)
-# end = time.time()
-# print("time used: {}".format(end - start))
+start = time.time()
+regrets, ratings, films_rec, ratings_taken_mean, ratings_taken_ucb = lin_ucb.fit(users, niter)
+end = time.time()
+print("time used: {}".format(end - start))
 
-# all_films_rewards = lin_ucb.data.reward(lin_ucb.users[users],np.arange(lin_ucb.n_movies))
+all_films_rewards = lin_ucb.data.reward(lin_ucb.users[users],np.arange(lin_ucb.n_movies))
 bandit_plot(regrets, ratings, films_rec, ratings_taken_mean, ratings_taken_ucb, all_films_rewards[0])
