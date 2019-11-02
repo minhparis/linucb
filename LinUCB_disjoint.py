@@ -14,7 +14,7 @@ import time
 import numpy as np
 import bandit_plotting
 
-class LinUCB:
+class LinUCB_disjoint:
     def __init__(self, movielens_data, alpha = 1, lambda_ = 1, delta = 0):
         self.data = movielens_data
         self.alpha = alpha
@@ -98,22 +98,24 @@ def bandit_plot(regrets, ratings, films_rec, ratings_taken_mean, ratings_taken_u
     bandit_plotting.ratings(ratings)
     bandit_plotting.rating_estimated(ratings_taken_mean, ratings_taken_ucb)
     
-if 'movielens_data' not in locals():
-    print('preparing data')
-    movielens_data = MovieLensData()
 
-niter = 300
-alpha = 2.8
-lambda_ = 2
-delta = 0. # noise
-lin_ucb = LinUCB(movielens_data, alpha, lambda_, delta)
-
-users = [0,1,2]
-
-start = time.time()
-regrets, ratings, films_rec, ratings_taken_mean, ratings_taken_ucb = lin_ucb.fit(users, niter)
-end = time.time()
-print("time used: {}".format(end - start))
-
-all_films_rewards = lin_ucb.data.reward(lin_ucb.users[users],np.arange(lin_ucb.n_movies))
-bandit_plot(regrets, ratings, films_rec, ratings_taken_mean, ratings_taken_ucb, all_films_rewards[0])
+if __name__ == '__main__':
+    if 'data' not in locals():
+        print('preparing data')
+        data = MovieLensData()
+        
+    niter = 500
+    alpha = 1.7
+    lambda_ = 1
+    delta = 0. # noise
+    lin_ucb = LinUCB_disjoint(data, alpha, lambda_, delta)
+    
+    users = [0]
+    
+    start = time.time()
+    regrets, ratings, films_rec, ratings_taken_mean, ratings_taken_ucb = lin_ucb.fit(users, niter)
+    end = time.time()
+    print("time used: {}".format(end - start))
+    
+    all_films_rewards = lin_ucb.data.reward(lin_ucb.users[users],np.arange(lin_ucb.n_movies))
+    bandit_plot(regrets, ratings, films_rec, ratings_taken_mean, ratings_taken_ucb, all_films_rewards[0])

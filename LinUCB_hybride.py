@@ -13,7 +13,7 @@ import time
 from LinUCB_dataPre import MovieLensData
 import bandit_plotting
 
-class LinUCB:
+class LinUCB_hybrid:
     def __init__(self, movielens_data, alpha=1, lambda_theta=1, lambda_beta=1, delta=0):
         self.data = movielens_data
         self.alpha = alpha
@@ -123,7 +123,7 @@ class LinUCB:
             
         ratings_esti_mean = np.vstack(ratings_esti_mean)
         ratings_ucb = np.vstack(ratings_ucb)
-        return regrets, ratings, ratings_esti_mean, ratings_ucb, ratings_taken_mean, ratings_taken_ucb, films_rec
+        return regrets, ratings, films_rec, ratings_taken_mean, ratings_taken_ucb, ratings_esti_mean, ratings_ucb 
     
 def bandit_plot(regrets, ratings, r_mean, r_ucb, r_taken_mean, r_taken_ucb, films_rec, data, lin_ucb, user):
     bandit_plotting.films_freq_rewards_2(films_rec, user, data, lin_ucb)
@@ -137,21 +137,23 @@ def bandit_plot(regrets, ratings, r_mean, r_ucb, r_taken_mean, r_taken_ucb, film
     bandit_plotting.plot_cum_regrets(regrets,"LinUCB", xsqrtlog=False)
     bandit_plotting.plot_cum_regrets(regrets,"LinUCB", xsqrtlog=True)
 
-if 'data' not in locals():
-    print('preparing data')
-    data = MovieLensData()
 
-niter = 300
-alpha = 1.4
-lambda_theta = 1.0
-lambda_beta = 1.0
-delta = 0. # noise
-lin_ucb = LinUCB(data, alpha, lambda_theta, lambda_beta, delta)
-
-user = [0,1,2]
-
-start = time.time()
-regrets, ratings, r_esti_mean, r_ucb, r_taken_mean, r_taken_ucb, films_rec = lin_ucb.fit(user, niter)
-end = time.time()
-print("time used: {}".format(end - start))
-bandit_plot(regrets, ratings, r_esti_mean, r_ucb, r_taken_mean, r_taken_ucb, films_rec, data, lin_ucb, user)
+if __name__ == '__main__':
+    if 'data' not in locals():
+        print('preparing data')
+        data = MovieLensData()
+    
+    niter = 300
+    alpha = 1.4
+    lambda_theta = 1.0
+    lambda_beta = 1.0
+    delta = 0. # noise
+    lin_ucb = LinUCB_hybrid(data, alpha, lambda_theta, lambda_beta, delta)
+    
+    users = [0,1,2]
+    
+    start = time.time()
+    regrets, ratings, films_rec, r_taken_mean, r_taken_ucb, r_esti_mean, r_ucb = lin_ucb.fit(users, niter)
+    end = time.time()
+    print("time used: {}".format(end - start))
+    bandit_plot(regrets, ratings, r_esti_mean, r_ucb, r_taken_mean, r_taken_ucb, films_rec, data, lin_ucb, user)
