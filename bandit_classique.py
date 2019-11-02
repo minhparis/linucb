@@ -125,7 +125,7 @@ def bandit_plot(bandit, mean_reward, regret, mean_regret, flag):
         plt.title('regret')
         plt.show()
     elif flag == 'log':
-        plt.yscale('log')
+        plt.xscale('log')
         plt.plot(regret)
         plt.title('regret')
         plt.show()
@@ -134,22 +134,37 @@ def bandit_plot(bandit, mean_reward, regret, mean_regret, flag):
         plt.title('regret')
         plt.show()
         
+def plot_regret_comp(regret_random, regret_greedy, regret_ucb):
+    plt.plot(regret_random, label='random')
+    plt.plot(regret_greedy, label='$epsilon$-greedy')
+    plt.plot(regret_ucb, label='UCB1')
+    plt.title('regret cumulé')
+    plt.legend()
+    plt.show()
 
+def single_test(politique, k, T, niter, epsilon):
+    
+    if politique == 'greedy':
+        flag = 'loglog' 
+    elif politique == 'UCB':
+        flag = 'normal'
+    else:
+        flag = 'normal'
+    bandit, mean_reward, regret, mean_regret = run_bandit(k, T, niter, politique, epsilon)
+    bandit_plot(bandit, mean_reward, regret, mean_regret, flag)
+
+def multi_test(k, T, niter, epsilon):
+    bandit_random, mean_reward_random, regret_random, mean_regret_random = run_bandit(k, T, niter, 'random', epsilon)
+    bandit_greedy, mean_reward_greedy, regret_greedy, mean_regret_greedy = run_bandit(k, T, niter, 'greedy', epsilon)
+    bandit_ucb, mean_reward_ucb, regret_ucb, mean_regret_ucb = run_bandit(k, T, niter, 'ucb', epsilon)
+    plot_regret_comp(regret_random, regret_greedy, regret_ucb)
 
 if __name__ == "__main__":
     # parameters
     k =10
     T =10000 #number of step
     niter = 1 #iterate 10 times to get average values
-    politique = 'UCB' # random, greedy or UCB
+    politique = 'greedy' # random, greedy or UCB
     epsilon = 5
     
-    if politique == 'greedy':
-        flag = 'loglog'
-    elif politique == 'UCB':
-        flag = 'log'
-    else:
-        flag = 'normal'
-    bandit, mean_reward, regret, mean_regret = run_bandit(k, T, niter, politique, epsilon)
-    bandit_plot(bandit, mean_reward, regret, mean_regret, flag)
-    print(bandit.mu)
+    multi_test(k, T, niter, epsilon)
