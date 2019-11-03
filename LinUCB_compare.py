@@ -14,23 +14,23 @@ from LinUCB_dataPre import MovieLensData
 import matplotlib.pyplot as plt
 import time
 
-def plot_regret_com(regrets_dis, regrets_hyb):
+def plot_regret_comp(regrets_dis, regrets_hyb):
     plt.plot(regrets_dis, label = 'regret cumulé - LinUCB disjoint')
     plt.plot(regrets_hyb, label = 'regret cumulé - LinUCB hybride')
     plt.title('regret cumulé comparaison')
     plt.legend()
     plt.show()
 
-def plot_ratings_com(r_dis, r_hyb):
+def plot_ratings_comp(r_dis, r_hyb):
     plt.plot(r_dis, label = 'ratings - LinUCB disjoint')
     plt.plot(r_hyb, label = 'ratings - LinUCB hybride')
     plt.title('ratings comparaison')
     plt.legend()
     plt.show()
 
-def plot_com(regrets_dis, regrets_hyb, r_dis, r_hyb):
-    plot_regret_com(regrets_dis, regrets_hyb)
-    plot_ratings_com(r_dis, r_hyb)
+def plot_comp(regrets_dis, regrets_hyb, r_dis, r_hyb):
+    plot_regret_comp(regrets_dis, regrets_hyb)
+    plot_ratings_comp(r_dis, r_hyb)
     
 if __name__ == '__main__':
     if 'data' not in locals():
@@ -59,5 +59,5 @@ if __name__ == '__main__':
     end = time.time()
     print("LinUCB hybride time used: {}".format(end - start))
     
-    plot_com(regrets_dis, regrets_hyb, r_dis, r_hyb)
+    plot_comp(regrets_dis, regrets_hyb, r_dis, r_hyb)
     
