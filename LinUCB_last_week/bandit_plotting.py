@@ -122,6 +122,7 @@ def rating_estimated(r_taken_mean, r_taken_ucb):
     ax.set_xlabel("T")
     ax.set_ylabel("rating")
     ax.set_title("estimated rating")
+    plt.legend()
     plt.show()
 
 def ratings_estimated(films_rec, ratings, flag = 'mean'):

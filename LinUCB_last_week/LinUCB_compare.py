@@ -16,10 +16,12 @@ import matplotlib.pyplot as plt
 import time
 
 def plot_regret_comp(regrets_dis, regrets_hyb, regrets_ucb1):
-    plt.plot(regrets_ucb1, label = 'regret cumulé - UCB1')
-    plt.plot(regrets_dis, label = 'regret cumulé - LinUCB disjoint')
-    plt.plot(regrets_hyb, label = 'regret cumulé - LinUCB hybride')
+    plt.plot(regrets_ucb1, label = 'UCB1')
+    plt.plot(regrets_dis, label = 'LinUCB disjoint')
+    plt.plot(regrets_hyb, label = 'LinUCB hybride')
     plt.title('regret cumulé comparaison')
+    plt.xlabel('T')
+    plt.ylabel('regert')
     plt.legend()
     plt.show()
 

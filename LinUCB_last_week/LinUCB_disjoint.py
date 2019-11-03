@@ -105,7 +105,7 @@ if __name__ == '__main__':
         data = MovieLensData()
         
     niter = 500
-    alpha = 1.7
+    alpha = 1.6
     lambda_ = 1
     delta = 0. # noise
     lin_ucb = LinUCB_disjoint(data, alpha, lambda_, delta)
