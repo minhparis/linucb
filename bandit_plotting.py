@@ -9,7 +9,7 @@ plt.style.use('seaborn')
 
 def plot_cum_regrets(regrets, algo_name, xsqrtlog=False):
     '''regrets <list>, algo_name <str>, xsqrtlog <bool>, show <bool>'''
-    fig, ax = plt.subplots(figsize=(10,6))
+    fig, ax = plt.subplots()
     fig.tight_layout()
     ax.set_title("{} Cumulative Regret".format(algo_name))
     ax.set_ylabel("$R(t)$")

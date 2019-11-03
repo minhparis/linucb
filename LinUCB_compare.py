@@ -37,7 +37,7 @@ if __name__ == '__main__':
         print('preparing data')
         data = MovieLensData()
     niter = 500
-    alpha = 1.7
+    alpha = 1.6
     lambda_ = 1
     delta = 0. # noise
     
@@ -49,7 +49,6 @@ if __name__ == '__main__':
     end = time.time()
     print("LinUCB disjoint time used: {}".format(end - start))
     
-    alpha = 1.7
     lambda_theta = 1.0
     lambda_beta = 1.0
     delta = 0. # noise

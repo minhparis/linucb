@@ -63,7 +63,7 @@ class LinUCB_hybrid:
                     +x.transpose().dot(Aa_inv).dot(x)\
                     +x.transpose().dot(Aa_inv).dot(Ba).dot(A0_inv).dot(Ba.transpose()).dot(Aa_inv).dot(x)
             if s_ta < 0:
-                print("damn it something's going wrong with {}th film".format(a))
+                print("something's going wrong with {}th film".format(a))
                 p_t[a] = 0
                 continue
             mean_t[a] = z.transpose().dot(self.beta)+x.transpose().dot(self.theta[a,:])
@@ -143,17 +143,17 @@ if __name__ == '__main__':
         print('preparing data')
         data = MovieLensData()
     
-    niter = 300
-    alpha = 1.4
+    niter = 500
+    alpha = 1.5
     lambda_theta = 1.0
     lambda_beta = 1.0
     delta = 0. # noise
     lin_ucb = LinUCB_hybrid(data, alpha, lambda_theta, lambda_beta, delta)
     
-    users = [0,1,2]
+    users = [0]
     
     start = time.time()
     regrets, ratings, films_rec, r_taken_mean, r_taken_ucb, r_esti_mean, r_ucb = lin_ucb.fit(users, niter)
     end = time.time()
     print("time used: {}".format(end - start))
-    bandit_plot(regrets, ratings, r_esti_mean, r_ucb, r_taken_mean, r_taken_ucb, films_rec, data, lin_ucb, user)
+    bandit_plot(regrets, ratings, r_esti_mean, r_ucb, r_taken_mean, r_taken_ucb, films_rec, data, lin_ucb, users)
