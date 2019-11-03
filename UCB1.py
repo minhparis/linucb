@@ -14,14 +14,12 @@ Created on Thu Oct 31 22:14:24 2019
 # See the link below
 # http://homes.di.unimi.it/cesa-bianchi/Pubblicazioni/ml-02.pdf
 
-import matplotlib.pyplot as plt
 from LinUCB_dataPre import MovieLensData
 import time
-from collections import Counter
 import numpy as np
 import bandit_plotting
 
-class LinUCB:
+class LinUCB1:
     def __init__(self, movielens_data, alpha=1,  delta=0):
         self.data = movielens_data
         self.alpha = alpha
@@ -105,19 +103,20 @@ def bandit_plot(regrets, ratings, films_rec, r_taken_mean, r_taken_ucb, data, li
     
     bandit_plotting.rating_estimated(r_taken_mean, r_taken_ucb)
 
-if 'movielens_data' not in locals():
-    print('preparing data')
-    movielens_data = MovieLensData()
-
-niter = 3000
-alpha = 0.3
-delta = 0. # noise
-lin_ucb = LinUCB(movielens_data, alpha, delta)
-
-user = [0]
-
-start = time.time()
-regrets, ratings, films_rec, ratings_taken_mean, ratings_taken_ucb = lin_ucb.fit(user, niter)
-end = time.time()
-print("time used: {}".format(end - start))
-bandit_plot(regrets, ratings, films_rec, ratings_taken_mean, ratings_taken_ucb, movielens_data, lin_ucb, user)
+if __name__ == '__main__':
+    if 'movielens_data' not in locals():
+        print('preparing data')
+        movielens_data = MovieLensData()
+    
+    niter = 3000
+    alpha = 0.3
+    delta = 0. # noise
+    lin_ucb = LinUCB1(movielens_data, alpha, delta)
+    
+    users = [0]
+    
+    start = time.time()
+    regrets, ratings, films_rec, ratings_taken_mean, ratings_taken_ucb = lin_ucb.fit(users, niter)
+    end = time.time()
+    print("time used: {}".format(end - start))
+    bandit_plot(regrets, ratings, films_rec, ratings_taken_mean, ratings_taken_ucb, movielens_data, lin_ucb, users)

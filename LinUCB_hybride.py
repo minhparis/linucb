@@ -126,16 +126,16 @@ class LinUCB_hybrid:
         return regrets, ratings, films_rec, ratings_taken_mean, ratings_taken_ucb, ratings_esti_mean, ratings_ucb 
     
 def bandit_plot(regrets, ratings, r_mean, r_ucb, r_taken_mean, r_taken_ucb, films_rec, data, lin_ucb, user):
-    bandit_plotting.films_freq_rewards_2(films_rec, user, data, lin_ucb)
-    bandit_plotting.ratings(ratings)
+    # bandit_plotting.films_freq_rewards_2(films_rec, user, data, lin_ucb)
+    # bandit_plotting.ratings(ratings)
     
-    bandit_plotting.ratings_estimated(films_rec, r_mean, flag = 'mean')
-    bandit_plotting.ratings_estimated(films_rec, r_ucb, flag = 'ucb')
+    # bandit_plotting.ratings_estimated(films_rec, r_mean, flag = 'mean')
+    # bandit_plotting.ratings_estimated(films_rec, r_ucb, flag = 'ucb')
     
-    bandit_plotting.rating_estimated(r_taken_mean, r_taken_ucb)
+    # bandit_plotting.rating_estimated(r_taken_mean, r_taken_ucb)
     
     bandit_plotting.plot_cum_regrets(regrets,"LinUCB", xsqrtlog=False)
-    bandit_plotting.plot_cum_regrets(regrets,"LinUCB", xsqrtlog=True)
+    # bandit_plotting.plot_cum_regrets(regrets,"LinUCB", xsqrtlog=True)
 
 
 if __name__ == '__main__':
@@ -144,8 +144,8 @@ if __name__ == '__main__':
         data = MovieLensData()
     
     niter = 500
-    alpha = 1.5
-    lambda_theta = 1.0
+    alpha = 1.6
+    lambda_theta = 1.5
     lambda_beta = 1.0
     delta = 0. # noise
     lin_ucb = LinUCB_hybrid(data, alpha, lambda_theta, lambda_beta, delta)

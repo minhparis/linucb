@@ -10,27 +10,30 @@ Created on Sat Nov  2 23:49:22 2019
 
 from LinUCB_disjoint import LinUCB_disjoint
 from LinUCB_hybride import LinUCB_hybrid
+from UCB1 import LinUCB1
 from LinUCB_dataPre import MovieLensData
 import matplotlib.pyplot as plt
 import time
 
-def plot_regret_comp(regrets_dis, regrets_hyb):
+def plot_regret_comp(regrets_dis, regrets_hyb, regrets_ucb1):
+    plt.plot(regrets_ucb1, label = 'regret cumulé - UCB1')
     plt.plot(regrets_dis, label = 'regret cumulé - LinUCB disjoint')
     plt.plot(regrets_hyb, label = 'regret cumulé - LinUCB hybride')
     plt.title('regret cumulé comparaison')
     plt.legend()
     plt.show()
 
-def plot_ratings_comp(r_dis, r_hyb):
+def plot_ratings_comp(r_dis, r_hyb, r_ucb1):
+    plt.plot(r_ucb1, label = 'ratings - UCB1')
     plt.plot(r_dis, label = 'ratings - LinUCB disjoint')
     plt.plot(r_hyb, label = 'ratings - LinUCB hybride')
     plt.title('ratings comparaison')
     plt.legend()
     plt.show()
 
-def plot_comp(regrets_dis, regrets_hyb, r_dis, r_hyb):
-    plot_regret_comp(regrets_dis, regrets_hyb)
-    plot_ratings_comp(r_dis, r_hyb)
+def plot_comp(regrets_dis, regrets_hyb, regrets_ucb1, r_dis, r_hyb, r_ucb1):
+    plot_regret_comp(regrets_dis, regrets_hyb, regrets_ucb1)
+    plot_ratings_comp(r_dis, r_hyb, r_ucb1)
     
 if __name__ == '__main__':
     if 'data' not in locals():
@@ -59,5 +62,12 @@ if __name__ == '__main__':
     end = time.time()
     print("LinUCB hybride time used: {}".format(end - start))
     
-    plot_comp(regrets_dis, regrets_hyb, r_dis, r_hyb)
+    
+    start = time.time()
+    lin_ucb = LinUCB1(data, alpha, delta)
+    regrets_ucb1, r_ucb1, films_rec, ratings_taken_mean, ratings_taken_ucb = lin_ucb.fit(users, niter)
+    end = time.time()
+    print("UCB1 time used: {}".format(end - start))
+    
+    plot_comp(regrets_dis, regrets_hyb, regrets_ucb1, r_dis, r_hyb, r_ucb1)
     
